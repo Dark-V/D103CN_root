@@ -1,4 +1,5 @@
 # D103CN FEL root
+<img width="1443" height="814" alt="image" src="https://github.com/user-attachments/assets/ecd9a565-941f-471b-aa3d-f8cd7917bbe2" />
 
 Physical-access UART root for the Xiaomi Mijia M30S (`xiaomi.vacuum.d103cn`). [Русский](README.ru.md) · [Research / SSH Wiki](https://github.com/Dark-V/D103CN_root/wiki)
 
