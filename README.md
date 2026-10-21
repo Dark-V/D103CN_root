@@ -2,6 +2,12 @@
 
 **Original successful rooting: firmware `4.5.6_1409`, board `R2405 v4`, Athena Linux `r2405_release`.**
 
+> [!CAUTION]
+> Unofficial project prepared for educational and research purposes. Use only on a device you own or are authorized to modify. **ALL ACTIONS ARE AT YOUR OWN RISK.** This can permanently brick the vacuum, destroy data or create electrical/battery hazards. There is **no guarantee of successful root, compatibility, safe operation or recovery**, even on the firmware listed above. Backups and checks do not guarantee recovery. Software is provided **AS IS**, without warranty, under the [MIT license](LICENSE) (also supplied as [.license](.license)); support, repairs and replacement are not promised.
+
+> [!IMPORTANT]
+> **After obtaining SSH access, block the vacuum's Internet/WAN access on your router/firewall.** Keep only the LAN communication you need; cover both IPv4 and IPv6 and verify the restriction. Prefer setting this block before connecting to your home router. **Do not expose or forward SSH to the Internet.** Installing this SSH addon does not disable the factory cloud connections or configure your router's firewall.
+
 <img width="1443" height="814" alt="image" src="https://github.com/user-attachments/assets/ecd9a565-941f-471b-aa3d-f8cd7917bbe2" />
 
 Physical-access UART root for the Xiaomi Mijia M30S (`xiaomi.vacuum.d103cn`). [Русский](README.ru.md) · [Research / SSH Wiki](https://github.com/Dark-V/D103CN_root/wiki)
@@ -133,6 +139,8 @@ sh /tmp/uart-fix.sh
 Stop the HTTP server and perform a **normal reboot** to remove existing competing processes. Verify `id` again. The `/tmp` lock resets on reboot; getty is not automatically respawned if it exits within that session.
 
 ## 6. SSH, after UART root works
+
+**Mandatory after the first successful SSH login: disconnect the vacuum from the Internet/WAN, while preserving the local SSH access you need.** If you blocked WAN beforehand, verify the block still applies. The SSH source-address filter is not an outbound Internet block.
 
 Follow [SSH + Wi-Fi instructions](https://github.com/Dark-V/D103CN_root/wiki/SSH). The optional package, sources and licenses are in the Wiki, not the root exploit tree. It uses your own Ed25519 client key and generates a new host key on the robot. No systemd, shared root password or shared authorization key is required. The existing prebuilt SSH addon supports only the documented AP/LAN subnets; it is not a WAN firewall. Verify login after a normal reboot before claiming persistence.
 

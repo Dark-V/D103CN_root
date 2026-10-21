@@ -20,7 +20,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This license applies to original project code/documentation only. Bundled
-third-party software retains its own licenses; see THIRD_PARTY.md and licenses/.
-No Xiaomi/Dreame firmware, manufacturer keys or device dumps are licensed or
-redistributed by this repository.
+This license applies to original project code/documentation only. Optional
+SSH support and external dependencies retain their own licenses. The SSH
+support archive includes its source and license notices; see:
+https://github.com/Dark-V/D103CN_root/wiki/SSH
+Manufacturer firmware, manufacturer keys and device dumps are not distributed
+or licensed by this repository.
