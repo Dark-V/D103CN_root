@@ -1,9 +1,14 @@
 # D103CN FEL root
+
+**Original successful rooting: firmware `4.5.6_1409`, board `R2405 v4`, Athena Linux `r2405_release`.**
+
 <img width="1443" height="814" alt="image" src="https://github.com/user-attachments/assets/ecd9a565-941f-471b-aa3d-f8cd7917bbe2" />
 
 Physical-access UART root for the Xiaomi Mijia M30S (`xiaomi.vacuum.d103cn`). [Русский](README.ru.md) · [Research / SSH Wiki](https://github.com/Dark-V/D103CN_root/wiki)
 
 **Experimental portable v2.** The original, personalized v1 obtained UART and SSH root on one R2405 v4 / firmware 4.5.6_1409 unit. This new per-device worker/writer has compiled and passed offline parsing checks against two saved captures of that same unit. **v2 has not been executed on a board. It is not a tested one-click installer.**
+
+The new sampled-resume/partial-backup approval workflow has also not been hardware-tested.
 
 ## What it does
 
@@ -42,7 +47,15 @@ This command explicitly uploads and executes the pinned **read-only SRAM NAND re
 .venv\Scripts\python.exe exploit.py --capture --out ..\D103CN-private\backup-01
 ```
 
-Allow time for the complete 285212672-byte capture. A USB error stops the command and preserves the partial files; an incomplete backup cannot authorize APPLY. This version has no automatic retry or cross-session resume. Do not reset/power off during capture. Never publish `D103CN-private`: the raw dump contains credentials and device data.
+A full capture is 285212672 bytes. This board may leave FEL/sleep after roughly 20–30 minutes. A disconnect stops the command and preserves a hash-verified prefix/receipt. Return the board to **fresh FEL**, then explicitly resume the **same directory**:
+
+```powershell
+.venv\Scripts\python.exe exploit.py --resume-capture ..\D103CN-private\backup-01
+```
+
+Resume validates every saved chunk, rereads up to 256 captured physical pages in 32 batches, and appends after the last verified page only if they match. It never restarts from page zero or silently truncates data. A mismatch, corrupt journal or unjournaled tail stops the tool. Repeat after another sleep if necessary. Do not normally boot the stock OS between capture sessions. Sample agreement is not proof the entire NAND is unchanged; a multi-session backup is not an atomic snapshot. There is no automatic retry, and an interrupted APPLY must **not** be resumed this way.
+
+An incomplete backup can also be used deliberately via the separate approval path below. Factory extraction needs at least the first **4096 verified physical pages** (8912896 bytes), not necessarily the complete NAND. This minimum covers factory inputs, not all data that may need recovery. Never publish `D103CN-private`: the raw dump contains credentials and device data.
 
 Extract **this backup's** verified factory components offline:
 
@@ -54,13 +67,15 @@ TOC0 is BCH80-corrected and SHA256-pinned. TOC1 copies are BCH32-verified; the r
 
 ## 3. Discover and prepare — no PROGRAM enabled
 
-Fully power-cycle, then enter fresh FEL. Use a complete backup acquired less than six hours ago. Preparation rereads 256 physical pages in 32 batches, including random samples, and compares them with the backup. Sampling is not a full identity/consistency proof.
+Fully power-cycle, then enter fresh FEL. Use a verified capture started less than six hours ago. A full backup is the default. Preparation rereads 256 captured physical pages in 32 batches, including random samples, and compares them with the backup. Sampling is not a full identity/consistency proof.
 
 ```powershell
 .venv\Scripts\python.exe exploit.py --prepare --inputs ..\D103CN-private\factory-01 --backup ..\D103CN-private\backup-01\receipt.json --session ..\D103CN-private\session-01 --accept-unverified-hardware
 ```
 
 The RAM backend denies PROGRAM and ERASE while locating the file. The planner checks the MBR, ext4 allocation, inode, mapping and active journal, preserves neighboring bytes, and rereads the metadata used in that decision. If it reports `PREPARE_OK`, it has found and checked a candidate, **not installed root**. Any rejection means stop; do not force addresses or substitute another unit's files.
+
+If you deliberately proceed with an incomplete verified prefix, append `--accept-partial-backup` to **both** PREPARE and APPLY. This does not turn it into a full backup or promise restoration. All factory/profile/live-page checks still apply.
 
 ## 4. Explicit one-shot NAND write
 
@@ -69,6 +84,8 @@ Do **not** reset or disconnect after PREPARE. Within ten minutes, using the same
 ```powershell
 .venv\Scripts\python.exe exploit.py --apply --session ..\D103CN-private\session-01 --accept-unverified-hardware --accept-nand-write
 ```
+
+Before any write attempt, APPLY shows the target sector and captured-page count and requires you to type `WRITE <sector>` in an interactive terminal. With `--accept-partial-backup`, the phrase is instead `WRITE <sector> WITHOUT FULL BACKUP`. Any other answer or EOF cancels before opening USB or consuming the write attempt. A flag alone, pipe or default answer cannot approve it. The tool never calls a partial prefix a complete backup.
 
 This rereads the live guards, permits one paired PROGRAM attempt, flushes, and checks native readback. `NATIVE_READBACK_OK` is not proof of a working stock-OS shell or independent physical recovery. `APPLY-CONSUMED` deliberately prevents repeating the attempt. On a timeout/error preserve everything and investigate; **do not remove the marker or blindly rerun**. There is no ERASE, automatic reboot or automated raw restore command.
 
